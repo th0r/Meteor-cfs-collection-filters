@@ -118,11 +118,9 @@ FS.Collection.prototype.allowsFile = function fsColAllowsFile(fileObj) {
 
   // Get info about the file
   var filename = fileObj.name();
+
+  // Fixes Android bug with empty string as file type
   var contentType = fileObj.type();
-  if (!contentType) {
-    filter.onInvalid && filter.onInvalid(filename + " has an unknown content type");
-    return false;
-  }
   var fileSize = fileObj.size();
   if (!fileSize || isNaN(fileSize)) {
     filter.onInvalid && filter.onInvalid(filename + " has an unknown file size");
@@ -144,7 +142,12 @@ FS.Collection.prototype.allowsFile = function fsColAllowsFile(fileObj) {
   if (!((saveAllContentTypes ||
           contentTypeInList(filter.allow.contentTypes, contentType)) &&
           !contentTypeInList(filter.deny.contentTypes, contentType))) {
-    filter.onInvalid && filter.onInvalid(filename + ' is of the type "' + contentType + '", which is not allowed');
+    if (filter.onInvalid) {
+        filter.onInvalid(contentType ?
+            filename + ' is of the type "' + contentType + '", which is not allowed' :
+            filename + ' has unknown content type'
+        );
+    }
     return false;
   }
 
